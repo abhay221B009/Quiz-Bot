@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Bot - Quiz</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #6dd5ed, #2193b0);
+            margin: 0;
+        }
+
+        .container {
+            width: 500px;
+            text-align: center;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+            animation: slideIn 1s;
+        }
+
+        .timer {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #FF5733; /* Red color for the timer */
+        }
+
+        .question {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-button {
+            padding: 15px;
+            margin: 10px 0;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .option-button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        .next-button {
+            padding: 12px 30px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .next-button:hover {
+            background-color: #45a049;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+            display: none; /* Hidden by default */
+            padding: 15px;
+            border-radius: 10px;
+            background-color: #f8f8f8;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .wrong {
+            color: red;
+        }
+
+        .attempts {
+            font-size: 1.1em;
+            margin: 20px 0;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="timer" id="timer">Time Left: 5:00</div>
+        <div class="attempts" id="attempts">Question 1 of 10</div>
+        <div class="question" id="question">Loading question...</div>
+        <div class="options" id="options"></div>
+        <div class="feedback" id="feedback"></div>
+        <button class="next-button" id="next-btn" onclick="loadNextQuestion()">Next Question</button>
+    </div>
+
+    <script>
+        let currentQuestion = 0;
+        let score = 0;
+        let questions = [];
+        let timeLeft = 300; // 5 minutes in seconds
+        let timerInterval;
+
+        // Fetch questions from the Open Trivia DB API
+        async function fetchQuestions() {
+            try {
+                const apiUrl = 'https://opentdb.com/api.php?amount=10&category=18&difficulty=easy'; // Use the new API link
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                questions = data.results;
+                loadNextQuestion();
+                startTimer();
+            } catch (error) {
+                console.error('Error fetching questions:', error);
+            }
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endQuiz();
+                } else {
+                    timeLeft--;
+                    document.getElementById("timer").textContent = `Time Left: ${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        function loadNextQuestion() {
+            document.getElementById("next-btn").style.display = "none";
+            document.getElementById("feedback").style.display = "none"; // Hide feedback
+            const question = questions[currentQuestion];
+            displayQuestion(question);
+            document.getElementById("attempts").textContent = `Question ${currentQuestion + 1} of 10`;
+        }
+
+        function displayQuestion(questionData) {
+            const questionElement = document.getElementById('question');
+            const optionsElement = document.getElementById('options');
+
+            // Decode HTML entities in question
+            questionElement.innerHTML = decodeHTML(questionData.question);
+            
+            // Clear previous options
+            optionsElement.innerHTML = '';
+
+            // Combine incorrect and correct answers and shuffle
+            const options = [...questionData.incorrect_answers, questionData.correct_answer];
+            shuffleArray(options);
+
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.classList.add('option-button');
+                button.textContent = decodeHTML(option);
+                button.onclick = () => checkAnswer(option, questionData.correct_answer);
+                optionsElement.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedOption, correctAnswer) {
+            const feedbackElement = document.getElementById('feedback');
+            feedbackElement.style.display = "block"; // Show feedback box
+
+            if (selectedOption === correctAnswer) {
+                score++;
+                feedbackElement.textContent = 'Correct!';
+                feedbackElement.classList.remove('wrong');
+                feedbackElement.classList.add('correct');
+            } else {
+                feedbackElement.textContent = `Wrong! The correct answer was ${decodeHTML(correctAnswer)}.`;
+                feedbackElement.classList.remove('correct');
+                feedbackElement.classList.add('wrong');
+            }
+
+            currentQuestion++;
+
+            if (currentQuestion < 10) {
+                document.getElementById("next-btn").style.display = "block";
+            } else {
+                endQuiz();
+            }
+        }
+
+        function endQuiz() {
+            clearInterval(timerInterval);
+            window.location.href = `result.html?score=${score}`;
+        }
+
+        // Helper function to decode HTML entities
+        function decodeHTML(html) {
+            const txt = document.createElement("textarea");
+            txt.innerHTML = html;
+            return txt.value;
+        }
+
+        // Helper function to shuffle the options
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Initial fetch
+        fetchQuestions();
+    </script>
+</body>
+</html>
