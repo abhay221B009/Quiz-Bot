@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Bot - Results</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #2193b0, #6dd5ed);
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+            background: white;
+            padding: 50px;
+            border-radius: 15px;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 1s ease-in-out;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #333;
+            animation: fadeInDown 1s ease-in-out;
+        }
+
+        .message {
+            font-size: 1.3em;
+            color: #555;
+            margin-bottom: 20px;
+            animation: fadeInDown 1.5s ease-in-out;
+        }
+
+        .score {
+            font-size: 2.5em;
+            color: #4CAF50;
+            margin-bottom: 30px;
+            font-weight: bold;
+            animation: zoomIn 1s ease-in-out;
+        }
+
+        .button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        .button + .button {
+            margin-left: 20px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #888;
+            animation: fadeInUp 2s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Congratulations!</h1>
+        <div class="message">You have completed the quiz!</div>
+        <div class="score">Your Score: <span id="score"></span> / 10</div>
+        <a href="quiz.html"><button class="button">Try Again</button></a>
+        <a href="index.html"><button class="button">Home</button></a>
+        <div class="footer">
+            Thanks for playing Quiz Bot!
+        </div>
+    </div>
+
+    <script>
+        // Get score from URL query parameter
+        const params = new URLSearchParams(window.location.search);
+        const score = params.get('score');
+        document.getElementById('score').textContent = score;
+
+        // Add dynamic congratulations message based on the score
+        const messageElement = document.querySelector('.message');
+        if (score == 10) {
+            messageElement.textContent = "Perfect score! You're a quiz master!";
+        } else if (score >= 7) {
+            messageElement.textContent = "Great job! You did really well!";
+        } else if (score >= 4) {
+            messageElement.textContent = "Good effort! Try again to improve your score.";
+        } else {
+            messageElement.textContent = "Keep practicing! You'll get better!";
+        }
+    </script>
+</body>
+</html>
